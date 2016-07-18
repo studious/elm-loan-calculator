@@ -4,11 +4,10 @@ import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (onBlur, onClick, targetValue)
-import Mortgage exposing (..)
+import MonthlyObligation
 import Debug exposing (log)
 import String exposing (toFloat, toInt)
 import Json.Decode as Json
-import Exts.Float as Round
 
 main =
     Html.beginnerProgram { model = model, view = view, update = update }
@@ -19,14 +18,14 @@ type alias Model =
     { principal : Float
     , years : Float
     , rate : Float
-    , monthly : Maybe MonthlyObligation
+    , monthly : MonthlyObligation.Model
     }
 
 defaultModel =
     { principal = 200000
     , years = 30
     , rate = 5.0
-    , monthly = Nothing
+    , monthly = MonthlyObligation.init
     }
 
 model = defaultModel
@@ -42,10 +41,8 @@ type Msg
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Calculate ->
-            case calculateMonthlyPayment model.principal model.years model.rate of
-                Nothing -> model
-                Just monthlyObligation -> { model | monthly = Just monthlyObligation }
+        Calculate msg ->
+            { model | monthly = MonthlyObligation.update (MonthlyObligation.Calculate model.principal model.years model.rate) model.monthly }
         Principal principal ->
             { model | principal = Result.withDefault defaultModel.principal (String.toFloat principal) }
         Years years ->
@@ -100,26 +97,7 @@ view model =
                         [ text "Calculate" ]
                     ]
                 ]
-            , h2
-                []
-                [ text "Monthly Payment: "
-                , span [ id "monthlyPayment", class "currency" ] 
-                    [
-                        case model.monthly of
-                            Nothing -> text ""
-                            Just monthly -> text (toString <| Round.roundTo 2 monthly.monthlyPayment)
-                    ]
-                ]
-            , h3
-                []
-                [ text "Monthly Rate: "
-                , span [ id "monthlyRate" ] 
-                    [
-                        case model.monthly of
-                            Nothing -> text ""
-                            Just monthly -> text (toString <| Round.roundTo 4 monthly.monthlyRate)
-                    ]
-                ]
+            , Html.map Calculate (MonthlyObligation.view model.monthly)
             ]
         ]
 
