@@ -1,4 +1,4 @@
-module MonthlyObligation exposing (Model, Msg, init, view, update)
+module MonthlyObligation exposing (Model, Msg(..), init, view, update)
 import Html exposing (..)
 import Exts.Float as Round
 import Html.Attributes exposing (..)

@@ -37,18 +37,24 @@ type Msg
     | Principal String
     | Years String
     | Rate String
+    | MonthlyObligationReport MonthlyObligation.Msg
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Calculate msg ->
-            { model | monthly = MonthlyObligation.update (MonthlyObligation.Calculate model.principal model.years model.rate) model.monthly }
+        Calculate ->
+            let updatedMonthlyObligation =
+                    MonthlyObligation.update (MonthlyObligation.Calculate model.principal model.years model.rate) model.monthly
+            in
+                { model | monthly = updatedMonthlyObligation }
         Principal principal ->
             { model | principal = Result.withDefault defaultModel.principal (String.toFloat principal) }
         Years years ->
             { model | years = Result.withDefault defaultModel.years (String.toFloat years) }
         Rate rate ->
             { model | rate = Result.withDefault defaultModel.rate (String.toFloat rate) }
+        MonthlyObligationReport msg ->
+            model
 
 onMyBlur : (String -> msg) -> Attribute msg
 onMyBlur tagger =
@@ -97,7 +103,7 @@ view model =
                         [ text "Calculate" ]
                     ]
                 ]
-            , Html.map Calculate (MonthlyObligation.view model.monthly)
+            , Html.map MonthlyObligationReport (MonthlyObligation.view model.monthly)
             ]
         ]
 
